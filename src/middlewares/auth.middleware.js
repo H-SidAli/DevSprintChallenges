@@ -2,9 +2,10 @@ const jwt = require("jsonwebtoken");
 
 // generate token
 const generateToken = (user) => {
+    console.log("Generating token for user:", JSON.stringify(user));
     return jwt.sign(
         {
-            id: user._id,
+            id: user.id,
             email: user.email,
             isAdmin: user.isAdmin,
         },
@@ -55,7 +56,6 @@ const authenticate = async (req, res, next) => {
         }
 
         const { valid, expired, user } = await verifyToken(token);
-
         if (!valid) {
             return res.status(401).json({
                 status: "fail",
@@ -66,7 +66,7 @@ const authenticate = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        logger.error(`Authentication error: ${error.message}`);
+        console.log(`Authentication error: ${error.message}`);
         res.status(500).json({
             status: "error",
             message: "Authentication failed",
@@ -84,7 +84,13 @@ const restrictTo = (...allowedRoles) => {
         }
 
         // Convert boolean isAdmin to role strings for comparison
-        const userRole = req.user.isAdmin ? "admin" : "user";
+        console.log(req.user);
+        let userRole;
+        if (req.user.isAdmin) {
+            userRole = "admin";
+        } else {
+            userRole = "user";
+        }
 
         if (!allowedRoles.includes(userRole)) {
             console.warn(
@@ -92,6 +98,7 @@ const restrictTo = (...allowedRoles) => {
             );
             return res.status(403).json({
                 status: "fail",
+                role: userRole,
                 message: "You do not have permission to perform this action",
             });
         }

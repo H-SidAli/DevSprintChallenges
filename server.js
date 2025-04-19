@@ -25,7 +25,7 @@ mongoose
     })
     .catch((err) => console.error("❌ DB Connection error:", err));
 
-/*async function codeQR(req, res) {
+async function codeQR(req, res) {
     try {
         const uniqueString = uuidv4(); // Generate a unique identifier
         const qrCodeDataUrl = await QRCode.toDataURL(uniqueString);
@@ -42,4 +42,4 @@ mongoose
 
 app.listen(PORT, () => {
     console.log(`QR Code Generator running at http://localhost:${PORT}`);
-});*/
+});

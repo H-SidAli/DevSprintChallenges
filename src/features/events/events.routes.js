@@ -7,15 +7,14 @@ const {
 
 const eventsController = require("./events.controller");
 
-// router.post("/", authenticate, restrictTo("admin"), eventsController.addEvent);
+router.post("/addEventCSV", authenticate, restrictTo("admin"), eventsController.addEventsCSV);
 router.get("/", authenticate, eventsController.getAllEvents);
 // router.get("/:id", eventsController.getEventById);
-// router.put(
-//     "/:id",
-//     authenticate,
-//     restrictTo("admin"),
-//     eventsController.editEvent
-// );
-// router.delete("/:id",authenticate, restrictTo("admin") eventsController.deleteEvent);
+router.put(
+    "/:id",
+    authenticate,
+    restrictTo("admin"),
+    eventsController.editEvent
+);
 
 module.exports = router;

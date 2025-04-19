@@ -2,7 +2,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Users = require("../users/users.model");
 const authService = require("./auth.service");
-
+const {
+    generateToken,
+    verifyToken,
+} = require("../../middlewares/auth.middleware");
 async function registerUser(req, res) {
     try {
         console.log("Registering user:", req.body);
@@ -16,6 +19,9 @@ async function registerUser(req, res) {
 
         // newUser
         const newUser = await authService.registerUser(req.body);
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = decoded;
 
         //success ta3 la reponse
         return res.status(201).json({
@@ -43,10 +49,12 @@ async function loginUser(req, res) {
         }
 
         const user = await authService.loginUser(req.body);
+        const token = generateToken(user.user);
 
         return res.status(201).json({
             success: true,
             message: "User logged in successfully",
+            token: token,
             data: user,
         });
     } catch (error) {
