@@ -2,7 +2,7 @@
 ************************DEVSPRINT-2-CSE***********************
 *****************TEAM CONSOLE.LOG("WINNERS")******************
 
-#Project content:
+**#Project content:**
 
     - This solution is desined to handle registration and
     participants selection process for the CSE events,
@@ -37,7 +37,7 @@
             with, alongside the ability of marking it as 
             unread
 
-#Our touch:
+**#Our touch:**
 
     - We included an authentification system allowing us
     to work on a real case integral fully featured backend 
@@ -66,4 +66,4 @@
     possible, so we set up a POSTMAN workspace highlighting
     all the http requests setten up for you to test.
         
-    ![My image]("diagram-01.jpg")
+    ![My image](diagram-01.jpg)
