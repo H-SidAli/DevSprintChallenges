@@ -20,8 +20,6 @@ async function registerUser(req, res) {
         // newUser
         const newUser = await authService.registerUser(req.body);
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = decoded;
 
         //success ta3 la reponse
         return res.status(201).json({
@@ -55,6 +53,7 @@ async function loginUser(req, res) {
             success: true,
             message: "User logged in successfully",
             token: token,
+            id: user.user._id,
             data: user,
         });
     } catch (error) {

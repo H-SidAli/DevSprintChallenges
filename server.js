@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const app = express();
 const { v4: uuidv4 } = require("uuid");
 const PORT = 3000;
+const QRCode = require("qrcode");
 
 // middlewares dyal json
 app.use(express.json());
@@ -13,14 +14,11 @@ const appRoutes = require("./src/app.routes.js");
 app.use("/", appRoutes);
 
 mongoose
-    .connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
+    .connect(process.env.MONGO_URI)
     .then(() => {
         console.log("✅ Connected to MongoDB");
-        app.listen(3000, () =>
-            console.log("🚀 Server running on http://localhost:3000")
+        app.listen(PORT, () =>
+            console.log(`🚀 Server running on http://localhost:${PORT}`)
         );
     })
     .catch((err) => console.error("❌ DB Connection error:", err));
@@ -39,7 +37,3 @@ async function codeQR(req, res) {
         res.status(500).send("Error generating QR code.");
     }
 }
-
-app.listen(PORT, () => {
-    console.log(`QR Code Generator running at http://localhost:${PORT}`);
-});

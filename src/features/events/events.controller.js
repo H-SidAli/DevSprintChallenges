@@ -5,6 +5,9 @@ const csv = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const eventRequests = require("../eventRequests/eventRequests.controller");
+const Notifications = require("../notifications/notifications.model");
+const ParticipationRequests = require("../eventRequests/eventRequests.model");
 
 //jebthom mn gpt jma3a, middlewares ta3 l upload
 const storage = multer.diskStorage({
@@ -39,7 +42,18 @@ const upload = multer({
 
 async function getAllEvents(req, res) {
     try {
-        const events = await eventsService.getAllEvents();
+        // Get the user from the request
+        const user = req.user;
+        let events;
+
+        if (user && user.isAdmin) {
+            // Admin users can see all events
+            events = await Events.find({});
+        } else {
+            // Regular users only see non-cancelled events
+            events = await Events.find({ status: "Upcoming" });
+        }
+
         res.status(200).json(events);
     } catch (error) {
         res.status(500).json({ message: "Error retrieving events" });
@@ -48,7 +62,16 @@ async function getAllEvents(req, res) {
 
 function validateEventData(data, rowNumber) {
     // Required fields (adjust based on your event model)
-    const requiredFields = ["title","description","date","location","responsible_person","status","type","duration"];
+    const requiredFields = [
+        "title",
+        "description",
+        "date",
+        "location",
+        "responsible_person",
+        "status",
+        "type",
+        "duration",
+    ];
 
     for (const field of requiredFields) {
         if (!data[field] || data[field].trim() === "") {
@@ -87,6 +110,7 @@ async function editEvent(req, res) {
 
 async function addEventsCSV(req, res) {
     // Use multer as middleware
+    // the file sent from postman lazem ykon esmo csvFile
     upload.single("csvFile")(req, res, async function (err) {
         if (err) {
             return res
@@ -152,7 +176,7 @@ async function addEventsCSV(req, res) {
             if (req.file && fs.existsSync(req.file.path)) {
                 fs.unlinkSync(req.file.path);
             }
-            
+
             res.status(500).json({
                 success: false,
                 message: "Error processing CSV file",
@@ -162,8 +186,94 @@ async function addEventsCSV(req, res) {
     });
 }
 
+async function getEventById(req, res) {
+    try {
+        const eventId = req.params.id;
+        const event = await eventsService.getEventById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+        res.status(200).json(event);
+    } catch (error) {
+        res.status(500).json({ message: "Error retrieving event" });
+    }
+}
+
+// deleting an event softly, and only when the event is still "Upcoming"
+async function deleteEvent(req, res) {
+    try {
+        const eventId = req.params.id;
+        const event = await eventsService.getEventById(eventId);
+        if (!event) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
+        if (event.status !== "Upcoming") {
+            return res.status(400).json({
+                message:
+                    "Cannot delete an event that is not upcoming (Already completed or cancelled)",
+            });
+        }
+
+        event.status = "Cancelled"; // Soft delete by changing status
+        await event.save();
+
+        res.status(200).json({ message: "Event deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting event" });
+    }
+}
+
+// Function to handle participant requests
+async function participantRequest(req, res) {
+    try {
+        const eventId = req.params.id;
+        const { participantId } = req.body;
+
+        // Check if the request already exists
+        const existingRequest = await ParticipationRequests.findOne({
+            eventId,
+            participantId,
+        });
+        if (existingRequest) {
+            return res.status(400).json({ message: "Request already exists" });
+        }
+
+        const newRequest = new ParticipationRequests({
+            eventId,
+            participantId,
+            status: "Pending",
+        });
+        await newRequest.save();
+
+        // Create a new notification for the admin
+        const notification = new Notifications({
+            eventRequestId: newRequest._id,
+            content: `New participation request for event ID: ${eventId}`,
+            isRead: false,
+        });
+        // notifying the admin in the platform, no need for spam emails
+        await notification.save();
+
+
+        res.status(201).json({
+            message: "Request created successfully",
+            request: newRequest,
+            id: newRequest._id,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error creating request",
+            error: error.message,
+        });
+    }
+}
+
 module.exports = {
     getAllEvents,
     editEvent,
     addEventsCSV,
+    getEventById,
+    deleteEvent,
+    participantRequest,
 };
