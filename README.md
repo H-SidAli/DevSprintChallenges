@@ -66,4 +66,4 @@
     possible, so we set up a POSTMAN workspace highlighting
     all the http requests setten up for you to test.
         
-    ![My image](/diagram-01.jpg)
+![My image](/diagram-01.jpg)
